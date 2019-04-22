@@ -3,6 +3,7 @@ package com.example.cc.myapplication;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -22,9 +23,14 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final int REQUEST_DIRECTORY = 0;
+    //需解压文件路径
     private static String compressedFile;
+    //文件类型
     private static String fileType;
+    //解压文件路径
     private static String decompressionPath;
+    //是否restart
+    private static boolean restart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,17 +49,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
 
         //用来选中文件后选中该应用时触发
+        openFolders();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        restart = true;
+        openFolders();
+    }
+
+    public void openFolders(){
         Intent intent = getIntent();
         String action = intent.getAction();
-        if (intent.ACTION_VIEW.equals(action)) {
+        if(intent.ACTION_VIEW.equals(action) || restart){
+            restart = false;
             Uri uri = intent.getData();
             compressedFile = Uri.decode(uri.getEncodedPath());
             fileType = compressedFile.substring(compressedFile.lastIndexOf(".")+1, compressedFile.length());
-            Log.v("fileType", fileType);
             if(fileType.equalsIgnoreCase("zip")){
-                final Intent chooserIntent = new Intent(this, DirectoryChooserActivity.class);
+                Intent chooserIntent = new Intent(this, DirectoryChooserActivity.class);
                 final DirectoryChooserConfig config = DirectoryChooserConfig.builder()
-                        .newDirectoryName("DirChooserSample")
+                        .newDirectoryName("新文件夹")
                         .allowReadOnlyDirectory(true)
                         .allowNewDirectoryNameModification(true)
                         .build();
